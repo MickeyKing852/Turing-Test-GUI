@@ -1,0 +1,13 @@
+import turtle
+import pyautogui
+import PIL
+
+def mouse_click():
+  x,y = pyautogui.position()
+  
+  draw = ImageDraw.Draw(target_image)
+  draw.line((x, y) + target_image.size, fill=128)
+  draw.line((x, target_image.size[1], target_image.size[0], 0), fill=128)
+
+target_image = PIL.Image(Target.png)
+turtle.onclick(mouse_click)
