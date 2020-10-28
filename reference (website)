@@ -1,3 +1,9 @@
 Pillow: https://pillow.readthedocs.io/en/stable/reference/ImageDraw.html
 pyautogui: https://pyautogui.readthedocs.io/en/latest/mouse.html
 Turtle: https://www.geeksforgeeks.org/turtle-onclick-function-in-python/
+Event: http://effbot.org/tkinterbook/tkinter-events-and-bindings.htm
+
+conda install -c anaconda pillow
+conda install -c conda-forge pyautogui
+conda install -c conda-forge/label/cf201901 pyautogui
+conda install -c conda-forge/label/cf202003 pyautogu
