@@ -7,9 +7,10 @@ p2 = None
 selected_area = None
 question = ''
 test_img = ''
-width, height = 842, 595
+default_width, default_height = 842, 595
 counter = 0
 data = {}
+info = {}
 data['result'] = []
 data['img_info'] = []
 
@@ -33,8 +34,8 @@ def image_file_load():
                 im = Image.open(default_path + file)
                 width, height = im.size
 
-                if (width, height) != (842, 595):
-                    im = im.resize((842, 595))
+                if (width, height) != (default_width, default_height):
+                    im = im.resize((default_width, default_height))
                     os.system('rm ' + default_path + file)
                     im.save(default_path + file)
                 data['img_info'].append({
@@ -42,13 +43,18 @@ def image_file_load():
                     'image name': file
                 })
 
+
 def convas_setup():
     global test_img, data, counter
     test_img = tk.PhotoImage(file=data['img_info'][counter]['path'])
     counter += 1
 
+
 def summit():
     global p1, p2, data, counter
+
+    default_path = '/root/Documents/Github/Turing-Test-GUI/Turing-Test-GUI/Test-Result.json'
+
     try:
         data['result'].append({
             'Image-name:': str(data['img_info'][counter]['image name']) + ' ',
@@ -62,25 +68,28 @@ def summit():
 
         Test_area.delete(selected_area)
         convas_setup()
-        Test_area.itemconfig(image, image = test_img)
+        Test_area.itemconfig(image, image=test_img)
 
     except IndexError:
-
         popup = tk.Tk()
         popup.title('Test Finish')
         label = tk.Label(popup, text='You finished the Turing Test').pack(side=tk.TOP, anchor=tk.CENTER)
         close_b = tk.Button(popup, text='Exit', command=lambda: popup.destroy()).pack(side=tk.BOTTOM, anchor=tk.CENTER)
-        #root.destroy()
+
+        # root.destroy()
         popup.mainloop()
+
 
 def mouse_R_click(event):
     global selected_area
     if selected_area != None:
         Test_area.delete(selected_area)
 
+
 def mouse_L_click(event):
     global p1
     p1 = event.x, event.y
+
 
 def mouse_move(event):
     global p1
@@ -94,15 +103,16 @@ def mouse_move(event):
                 Test_area.delete(selected_area)
             selected_area = Test_area.create_rectangle(p1, p2, outline='red', width=3)
 
+
 root = tk.Tk()
 root.title('Turing Test GUI')
-root.geometry(str(width + 30) + 'x' + str(height + 50))
+root.geometry(str(default_width + 30) + 'x' + str(default_height + 50))
 
 question = 'I am question'
 title = tk.Label(root, text='' + question)
 title.pack(side=tk.TOP)
 
-Test_area = tk.Canvas(root, width=width, height=height)
+Test_area = tk.Canvas(root, width=default_width, height=default_height)
 Test_area.bind("<Button-1>", mouse_L_click)
 Test_area.bind('<B1-Motion>', mouse_move)
 Test_area.bind('<Button-3>', mouse_R_click)
