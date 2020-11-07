@@ -1,6 +1,6 @@
 import tkinter as tk
 from PIL import Image
-import json, os
+import json, os, csv
 
 p1 = None
 p2 = None
@@ -12,7 +12,8 @@ counter = 0
 data = {}
 info = {}
 data['result'] = []
-data['img_info'] = []
+info['img_info'] = []
+
 
 def image_file_load():
     global width, height, img_files, data
@@ -38,7 +39,7 @@ def image_file_load():
                     im = im.resize((default_width, default_height))
                     os.system('rm ' + default_path + file)
                     im.save(default_path + file)
-                data['img_info'].append({
+                info['img_info'].append({
                     'path': default_path + file,
                     'image name': file
                 })
@@ -46,25 +47,41 @@ def image_file_load():
 
 def convas_setup():
     global test_img, data, counter
-    test_img = tk.PhotoImage(file=data['img_info'][counter]['path'])
+    test_img = tk.PhotoImage(file=info['img_info'][counter]['path'])
     counter += 1
 
 
 def summit():
     global p1, p2, data, counter
 
-    default_path = '/root/Documents/Github/Turing-Test-GUI/Turing-Test-GUI/Test-Result.json'
-
+    default_path = '/root/Documents/Github/Turing-Test-GUI/Turing-Test-GUI/Test-Result.csv'
+    fieldnames = ['image-name', 'vertex-1', 'vertex-2']
     try:
-        data['result'].append({
-            'Image-name:': str(data['img_info'][counter]['image name']) + ' ',
-            'vertex-1: ': str(p1) + ' ',
-            'vertex-2:': str(p2)
-        })
 
-        with open('/root/Documents/Github/Turing-Test-GUI/Turing-Test-GUI/Test-Result.json', 'w') as outfile:
-            json.dump(data['result'], outfile)
-        outfile.close()
+        if os.path.exists(default_path):
+            with open(default_path,'r') as out_file:
+                reader = csv.DictReader(out_file,fieldnames)
+                for row in reader:
+                    if row['image-name'] == str(info['img_info'][counter - 1]['image name']):
+                        raise RuntimeError
+                out_file.close()
+
+            with open(default_path, 'a') as in_file:
+                wirter = csv.DictWriter(in_file, fieldnames)
+                wirter.writerow(
+                    {'image-name': info['img_info'][counter - 1]['image name'], 'vertex-1': p1, 'vertex-2': p2})
+                in_file.close()
+
+        else:
+            create = open(default_path,'w')
+            create.close()
+
+            with open(default_path, 'a') as in_file:
+                wirter = csv.DictWriter(in_file, fieldnames)
+                wirter.writeheader()
+                wirter.writerow(
+                    {'image-name': info['img_info'][counter - 1]['image name'], 'vertex-1': p1, 'vertex-2': p2})
+            in_file.close()
 
         Test_area.delete(selected_area)
         convas_setup()
@@ -75,10 +92,13 @@ def summit():
         popup.title('Test Finish')
         label = tk.Label(popup, text='You finished the Turing Test').pack(side=tk.TOP, anchor=tk.CENTER)
         close_b = tk.Button(popup, text='Exit', command=lambda: popup.destroy()).pack(side=tk.BOTTOM, anchor=tk.CENTER)
-
         # root.destroy()
         popup.mainloop()
 
+    except RuntimeError:
+        Test_area.delete(selected_area)
+        convas_setup()
+        Test_area.itemconfig(image, image=test_img)
 
 def mouse_R_click(event):
     global selected_area
