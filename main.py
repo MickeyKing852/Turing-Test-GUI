@@ -76,7 +76,6 @@ def submit() -> None:
     try:
         default_path = '/root/Documents/Github/Turing-Test-GUI/Test-Result.csv'
         fieldnames = ['image-name', 'rectengle id', 'Top-left-x', 'Top-left-y', 'Bottom-right-x', 'Bottom-right-y']
-        repeated = False
 
         if os.path.exists(default_path):
             out_file = open(default_path, 'r')
@@ -85,20 +84,14 @@ def submit() -> None:
             writer = csv.DictWriter(in_file, fieldnames)
 
             for row in reader:
-                if row['image-name'] == str(INFO['img_info'][COUNTER - 1]['image name']):
+                if row['image-name'] is not str(INFO['img_info'][COUNTER - 1]['image name']):
                     for i in INFO['result']:
                         i = str(i).split(',')
-                        for j in out_file:
-                            # f"{j['Top-left-x']},{j['Top-left-y']},{j['Bottom-right-x']},{j['Bottom-right-y']}"
-                            if f"{i[2]},{i[3]},{i[4]},{i[5]}" is f"{j[2]},{j[3]},{j[4]},{j[5]}":
-                                repeated = True
-                                break
-                        if repeated is not True:
-                            writer.writerow(
-                                {'image-name': i[0], 'rectengle id': i[1], 'Top-left-x': i[2], 'Top-left-y': i[3],
-                                 'Bottom-right-x': i[4], 'Bottom-right-y': i[5]})
-                        # else:
-                        #     raise RuntimeError
+                        writer.writerow(
+                            {'image-name': i[0], 'rectengle id': i[1], 'Top-left-x': i[2], 'Top-left-y': i[3],
+                             'Bottom-right-x': i[4], 'Bottom-right-y': i[5]})
+                    else:
+                        raise RuntimeError
 
             in_file.close()
             out_file.close()
@@ -112,10 +105,11 @@ def submit() -> None:
                      'Bottom-right-x': i[4], 'Bottom-right-y': i[5]})
             in_file.close()
 
-        test_area.delete(SELECTED_AREA['rectangle'])
+        for i in SELECTED_AREA['rectangle']:
+            test_area.delete(i)
         convas_setup()
         test_area.itemconfig(image, image=TEST_IMG)
-        test_area.itemconfig(test_line, fill='blue')
+
 
     except IndexError:
         popup = tk.Tk()
@@ -127,10 +121,10 @@ def submit() -> None:
         popup.mainloop()
 
     except RuntimeError:
-        test_area.delete(SELECTED_AREA['rectangle'])
+        for i in SELECTED_AREA['rectangle']:
+            test_area.delete(i)
         convas_setup()
         test_area.itemconfig(image, image=TEST_IMG)
-        print(TEST_IMG)
 
 
 def reset_canvas() -> None:
