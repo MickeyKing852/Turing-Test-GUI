@@ -1,6 +1,6 @@
 import tkinter as tk
 from PIL import Image
-import csv, os
+import csv, os, traceback
 
 TOP_L_X: int = 0
 TOP_L_Y: int = 0
@@ -28,45 +28,45 @@ def image_file_load() -> None:
     default_path = '/root/Pictures/Turing_Test/'
     convert_need_formmat = ['.jpg', 'tif', 'tiff', '.bmp', '.jpeg', '.gif']
     try:
-        for r, d, f in os.walk(default_path):
+        while True:
+            for r, d, f in os.walk(default_path):
 
-            for file in f:
-                for extension in convert_need_formmat:
-                    if extension in file.lower():
+                for file in f:
+                    for extension in convert_need_formmat:
+                        if extension in file.lower():
+                            im = Image.open(default_path + file)
+                            im.save(default_path + file.lower().replace(extension, '.png'))
+                            os.remove(default_path + file)
+
+            for r, d, f in os.walk(default_path):
+                for file in f:
+                    if '.png' in file:
                         im = Image.open(default_path + file)
-                        im.save(default_path + file.lower().replace(extension, '.png'))
-                        os.remove(default_path + file)
+                        width, height = im.size
 
-        for r, d, f in os.walk(default_path):
-            for file in f:
-                if '.png' in file:
-                    im = Image.open(default_path + file)
-                    width, height = im.size
-
-                if (width, height) != (WIDTH, HEIGHT):
-                    im = im.resize((WIDTH, HEIGHT))
-                    os.system('rm ' + default_path + file)
-                    im.save(default_path + file)
-                INFO['img_info'].append({
-                    'path': default_path + file,
-                    'image name': file
-                })
-
+                    if (width, height) != (WIDTH, HEIGHT):
+                        im = im.resize((WIDTH, HEIGHT))
+                        os.system('rm ' + default_path + file)
+                        im.save(default_path + file)
+                    INFO['img_info'].append({
+                        'path': default_path + file,
+                        'image name': file
+                    })
+            yield None
     except Exception as e:
-
         alert = tk.Tk()
-
         alert.title('Error!!!')
-        alert.geometry('600x400')
-        error_label = tk.Label(alert, text=f'{e}').pack()
+        alert.geometry('800x200')
+        formatted_lines = traceback.format_exc().splitlines()
+        error_label = tk.Label(alert,
+                               text=f'  {formatted_lines[-1]}: {e}\n{formatted_lines[1]}\n{formatted_lines[2]}').pack()
         exit_b = tk.Button(alert, text='close', command=lambda: alert.destroy()).pack(side=tk.BOTTOM)
-
         alert.mainloop()
 
 
 def convas_setup() -> None:
     global TEST_IMG, INFO, COUNTER
-
+    next(img_load)
     TEST_IMG = tk.PhotoImage(file=INFO['img_info'][COUNTER]['path'])
     COUNTER += 1
 
@@ -76,7 +76,6 @@ def submit() -> None:
     try:
         default_path = '/root/Documents/Github/Turing-Test-GUI/Test-Result.csv'
         fieldnames = ['image-name', 'rectengle id', 'Top-left-x', 'Top-left-y', 'Bottom-right-x', 'Bottom-right-y']
-
         if os.path.exists(default_path):
             out_file = open(default_path, 'r')
             in_file = open(default_path, 'a')
@@ -125,6 +124,15 @@ def submit() -> None:
             test_area.delete(i)
         convas_setup()
         test_area.itemconfig(image, image=TEST_IMG)
+
+    except Exception as e:
+        alert = tk.Tk()
+        alert.title('Error!!!')
+        alert.geometry('800x200')
+        formatted_lines = traceback.format_exc().splitlines()
+        error_label = tk.Label(alert, text=f'  {formatted_lines[-1]}:\n{e}\n{formatted_lines[1]}\n{formatted_lines[2]}').pack()
+        exit_b = tk.Button(alert, text='close', command=lambda: alert.destroy()).pack(side=tk.BOTTOM)
+        alert.mainloop()
 
 
 def reset_canvas() -> None:
@@ -189,8 +197,7 @@ test_area.bind('<ButtonRelease-1>', sub_get_bottom_right_coordinate)
 reset = reset_canvas()
 test_area.bind('<Button-3>', lambda value: next(reset))
 test_area.pack(side=tk.TOP, anchor=tk.CENTER)
-
-image_file_load()
+img_load = image_file_load()
 convas_setup()
 image = test_area.create_image(1, 1, anchor=tk.NW, image=TEST_IMG)
 ok_button = tk.Button(root, text='OK', command=submit)
