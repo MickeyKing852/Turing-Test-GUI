@@ -1,29 +1,29 @@
 import json
 
-data = {}
-data['people'] = []
+DATA = {}
+DATA['people'] = []
 
-data['people'].append({
+DATA['people'].append({
     'name': 'Admin',
     'pwd' : 'toor'
 })
-data['people'].append({
+DATA['people'].append({
     'name': 'User01',
     'pwd': 'User01-Pa$$w0rd123'
 })
 
-data['people'].append({
+DATA['people'].append({
     'name': 'User01',
     'pwd': 'User02-Pa$$w0rd123'
 })
 
 with open('/root/Desktop/Test.json','w') as outfile:
-    json.dump(data,outfile)
+    json.dump(DATA, outfile)
 
 outfile.close()
 
 with open('/root/Desktop/Test.json','r') as infile:
     json.load(infile)
     output_f = format(' Name: {username:}\n Password: {pwd:}\n')
-    for p in data['people']:
+    for p in DATA['people']:
         print(output_f.format(username = p['name'], pwd = p['pwd']))
