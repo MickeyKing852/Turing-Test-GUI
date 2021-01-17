@@ -21,7 +21,7 @@ OUTPUT_CSV = os.path.join(Utils.get_project_root(), 'processed.csv')
 logger: logging.Logger
 
 
-class Trainer:
+class Test_GUI:
     csv_detail: Dict[str, List[Tuple[int, int, int, int]]]
     rectangles: List[Tuple[int, int, int, int]] = []
     files: List[str]
@@ -43,10 +43,10 @@ class Trainer:
 
     @staticmethod
     def init_logger() -> logging.Logger:
-        sys.excepthook = Trainer._exception_hook
+        sys.excepthook = Test_GUI._exception_hook
         formatter = logging.Formatter(
             '%(levelname)s [%(asctime)s] [%(module)s.%(funcName)s] %(message)s')
-        handler = LogHandler(formatter, os.path.join(LOGS_FOLDER, 'trainer.log'))
+        handler = LogHandler(formatter, os.path.join(LOGS_FOLDER, 'test_gui.log'))
         logging.basicConfig(**{'level': logging.INFO, 'handlers': [handler]})
         logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
         return logging.getLogger()
@@ -67,7 +67,7 @@ class Trainer:
 
     @staticmethod
     def to_correct_size(file: str, target_width: int, target_height: int) -> str or None:
-        png_file = Trainer.to_png(file)
+        png_file = Test_GUI.to_png(file)
         if png_file is None:
             return None
         im = Image.open(png_file)
@@ -81,7 +81,7 @@ class Trainer:
     @staticmethod
     def image_file_load(path: str) -> List[str]:
         files = [os.path.join(path, f) for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
-        files = [Trainer.to_correct_size(f, DEFAULT_WIDTH, DEFAULT_HEIGHT) for f in files]
+        files = [Test_GUI.to_correct_size(f, DEFAULT_WIDTH, DEFAULT_HEIGHT) for f in files]
         return [f for f in files if f is not None]
 
     @staticmethod
@@ -120,7 +120,7 @@ class Trainer:
     def submit(self, file):
         file_name = os.path.basename(file)
         self.csv_detail[file_name] = self.rectangles
-        Trainer.write_csv(OUTPUT_CSV, self.csv_detail)
+        Test_GUI.write_csv(OUTPUT_CSV, self.csv_detail)
         self.counter += 1
         if self.counter < len(self.files):
             self.reset()
@@ -164,7 +164,7 @@ class Trainer:
             self.area = None
 
     def main(self):
-        self.csv_detail = Trainer.read_csv(OUTPUT_CSV)
+        self.csv_detail = Test_GUI.read_csv(OUTPUT_CSV)
         self.files = self.image_file_load(RAW_FOLDER)
         self.counter = 0
 
@@ -193,6 +193,6 @@ class Trainer:
 
 
 if __name__ == '__main__':
-    logger = Trainer.init_logger()
-    trainer = Trainer()
-    trainer.main()
+    logger = Test_GUI.init_logger()
+    test_gui = Test_GUI()
+    test_gui.main()
