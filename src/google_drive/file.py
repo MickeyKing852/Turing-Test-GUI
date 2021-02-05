@@ -14,6 +14,7 @@ class MimeType(Enum):
     GIF = 'image/gif'
     ZIP = 'application/x-zip-compressed'
     FOLDER = 'application/vnd.google-apps.folder'
+    CSV = 'text/csv'
     UNKNOWN = ''
 
     @classmethod
@@ -36,6 +37,9 @@ class File:
 
     def get_file_type(self) -> str:
         return 'Folder' if self.mimeType is MimeType.FOLDER else f'{self.mimeType.name} File'
+
+    def to_dict(self):
+        return {'name': self.name, 'id': self.id, 'kind': self.kind.value, 'mimeType': self.mimeType.value}
 
     def __str__(self) -> str:
         return f'Google Drive {self.get_file_type()}[name="{self.name}", id="{self.id}"]'
