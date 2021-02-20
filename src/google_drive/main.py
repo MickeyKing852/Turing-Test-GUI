@@ -47,7 +47,7 @@ class DriveAccessor:
         permission = Drive.permission_info('1Z4vxJe39zUejiyB75MpqJLDrg1cP2M_5')
         logger.info(f'Permission detail = {permission}')
 
-        Drive.upload_single(PROCESSED_IMAGES_FOLDER_ID, os.path.join(Utils.get_project_root(), 'img', 'img10001.png'))
+        # Drive.upload_single(PROCESSED_IMAGES_FOLDER_ID, os.path.join(Utils.get_project_root(), 'img', 'img10001.png'))
         # zip_files: List[File] = [x for x in files if x.mimeType is MimeType.ZIP and not x.name.startswith('Done_')]
         # download_folder = Utils.get_project_root()
         # for i in range(0, len(zip_files)):

@@ -1,15 +1,17 @@
+import asyncio
 import csv
 import logging
 import os
 import sys
+import threading
 import tkinter as tk
 from typing import List, Dict, Tuple
-
 from PIL import Image
-
 from src.core.log_handler import LogHandler
 from src.core.util import Utils
+from src.google_drive.file_manage import File_manage
 
+HOME = Utils.get_project_root()
 SUPPORTED_FORMATS = ['.png', '.jpg', '.tif', '.tiff', '.bmp', '.jpeg', '.gif']
 TARGET_FORMAT = '.png'
 DEFAULT_WIDTH = 842
@@ -128,7 +130,9 @@ class Test_GUI:
             self.test_img = tk.PhotoImage(file=new_file)
             self.test_area.itemconfig(self.image, image=self.test_img)
             self.ok_button.configure(text='OK', command=lambda: self.submit(new_file))
-            self.title.configure(text=os.path.basename(self.files[self.counter]) + ' (Left-click to draw a box, Right-click to clear, okay to submit)')
+            self.title.configure(text=os.path.basename(
+                self.files[self.counter]) + ' (Left-click to draw a box, Right-click to clear, okay to submit)')
+
         else:
             popup = tk.Tk()
             popup.title('Test Finish')
@@ -163,19 +167,26 @@ class Test_GUI:
             self.selected_areas.append(self.area)
             self.area = None
 
-    def main(self):
+    def close_program(self):
+        self.root.destroy()
+        new_loop.stop()
+
+    async def main(self):
+
         self.csv_detail = Test_GUI.read_csv(OUTPUT_CSV)
         self.files = self.image_file_load(RAW_FOLDER)
         self.counter = 0
 
-        root = tk.Tk()
-        root.title('AI Trainer')
-        root.geometry(str(DEFAULT_WIDTH + 30) + 'x' + str(DEFAULT_HEIGHT + 50))
+        self.root = tk.Tk()
+        self.root.title('AI Trainer')
+        self.root.geometry(str(DEFAULT_WIDTH + 30) + 'x' + str(DEFAULT_HEIGHT + 50))
+        self.root.protocol("WM_DELETE_WINDOW", self.close_program)
 
-        self.title = tk.Label(root, text=os.path.basename(self.files[self.counter]) + ' (Left-click to draw a box, Right-click to clear, okay to submit)')
+        self.title = tk.Label(self.root, text=os.path.basename(
+            self.files[self.counter]) + ' (Left-click to draw a box, Right-click to clear, okay to submit)')
         self.title.pack(side=tk.TOP)
 
-        self.test_area = tk.Canvas(root, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT)
+        self.test_area = tk.Canvas(self.root, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT)
         self.test_area.bind('<Button-1>', lambda event: self.start_rectangle(event))
         self.test_area.bind('<B1-Motion>', lambda event: self.draw_rectangle(event))
         self.test_area.bind('<ButtonRelease-1>', lambda event: self.add_rectangle_to_list())
@@ -186,13 +197,20 @@ class Test_GUI:
         self.test_img = tk.PhotoImage(file=file)
         self.image = self.test_area.create_image(1, 1, anchor=tk.NW, image=self.test_img)
 
-        self.ok_button = tk.Button(root, text='OK', command=lambda: self.submit(file))
+        self.ok_button = tk.Button(self.root, text='OK', command=lambda: self.submit(file))
         self.ok_button.pack(side=tk.RIGHT, anchor=tk.W)
 
-        root.mainloop()
-
+        # replace root.mainloop()
+        while True:
+            self.root.update()
+            await asyncio.sleep(0)
 
 if __name__ == '__main__':
     logger = Test_GUI.init_logger()
     test_gui = Test_GUI()
-    test_gui.main()
+    manager = File_manage()
+    title = manager.search('Raw Images')
+    title = title[0]
+    tasks = [asyncio.ensure_future(manager.download(None,title)), asyncio.ensure_future(test_gui.main())]
+    new_loop = asyncio.get_event_loop()
+    new_loop.run_until_complete(asyncio.wait(tasks))
