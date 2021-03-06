@@ -5,6 +5,8 @@ import sys
 import zipfile
 from typing import List
 
+from PIL import Image
+
 from src.core.log_handler import LogHandler
 from src.core.util import Utils
 from src.google_drive.drive import Drive
@@ -12,6 +14,7 @@ from src.google_drive.file import File, MimeType
 
 LOGS_FOLDER = os.path.join(Utils.get_project_root(), 'logs')
 IMG_FOLDER = os.path.join(Utils.get_project_root(), 'img')
+RAW_FOLDER = os.path.join(Utils.get_project_root(), 'img_raw')
 FLOOR_PLAN_IMAGES_FOLDER_ID = '1u1QpBbcumSra8StCwtaOZTdFDdtpXUU3'
 RAW_IMAGES_FOLDER_ID = '1Of2lHAj2MO8laNdzE5qVM1oGlpfXRnoU'
 PROCESSED_IMAGES_FOLDER_ID = '19BjKK-aPlt-R8NMYTNhSIQMZkVeg-Pni'
@@ -40,14 +43,20 @@ class DriveAccessor:
         logger.info('==========================')
         logger.info('Program started')
         logger.info('==========================')
-        files: List[File] = Drive.list(FLOOR_PLAN_IMAGES_FOLDER_ID, max_count=sys.maxsize)
-        logger.info(f'File details for Floor Plan Folder = {", ".join([str(x) for x in files])}')
-        file = Drive.file_info('1Z4vxJe39zUejiyB75MpqJLDrg1cP2M_5')
-        logger.info(f'File detail = {file}')
-        permission = Drive.permission_info('1Z4vxJe39zUejiyB75MpqJLDrg1cP2M_5')
-        logger.info(f'Permission detail = {permission}')
+        files: List[File] = Drive.list(PROCESSED_IMAGES_FOLDER_ID, max_count=sys.maxsize)
+        for file in files:
+            Drive.download(file.id, RAW_FOLDER, override=False)
+            f = os.path.join(RAW_FOLDER, file.name)
+            im = Image.open(f).convert('L')
+            im.save(f)
+            Drive.upload_single(PROCESSED_IMAGES_FOLDER_ID, f)
+        # logger.info(f'File details for Floor Plan Folder = {", ".join([str(x) for x in files])}')
+        # file = Drive.file_info('1Z4vxJe39zUejiyB75MpqJLDrg1cP2M_5')
+        # logger.info(f'File detail = {file}')
+        # permission = Drive.permission_info('1Z4vxJe39zUejiyB75MpqJLDrg1cP2M_5')
+        # logger.info(f'Permission detail = {permission}')
 
-        Drive.upload_single(PROCESSED_IMAGES_FOLDER_ID, os.path.join(Utils.get_project_root(), 'img', 'img10001.png'))
+        # Drive.upload_single(PROCESSED_IMAGES_FOLDER_ID, os.path.join(Utils.get_project_root(), 'img', 'img10001.png'))
         # zip_files: List[File] = [x for x in files if x.mimeType is MimeType.ZIP and not x.name.startswith('Done_')]
         # download_folder = Utils.get_project_root()
         # for i in range(0, len(zip_files)):

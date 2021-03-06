@@ -68,7 +68,7 @@ class Trainer:
             if file_name.endswith(TARGET_FORMAT):
                 return file
             new_file = os.path.join(os.path.dirname(file), file_name.replace(extension_matched[0], TARGET_FORMAT))
-            im = Image.open(file)
+            im = Image.open(file).convert('L')
             im.save(new_file)
             Utils.os_try_catch(lambda: os.remove(file))
             return new_file
@@ -79,12 +79,12 @@ class Trainer:
         png_file = Trainer.to_png(file)
         if png_file is None:
             return None
-        im = Image.open(png_file)
+        im = Image.open(png_file).convert('L')
         width, height = im.size
         if (width, height) != (target_width, target_height):
             im = im.resize((target_width, target_height))
-            Utils.os_try_catch(lambda: os.remove(png_file))
-            im.save(png_file)
+        Utils.os_try_catch(lambda: os.remove(png_file))
+        im.save(png_file)
         return png_file
 
     @staticmethod
@@ -92,21 +92,6 @@ class Trainer:
         files = [os.path.join(path, f) for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
         files = [Trainer.to_correct_size(f, DEFAULT_WIDTH, DEFAULT_HEIGHT) for f in files]
         return [f for f in files if f is not None]
-
-    @staticmethod
-    def read_csv(file: str) -> Dict[str, List[Tuple[int, int, int, int]]]:
-        result = {}
-        try:
-            logger.info(f'reading detail from file {file}')
-            with open(file, mode='r') as csv_file:
-                csv_reader = csv.DictReader(csv_file, delimiter=',')
-                for row in csv_reader:
-                    if row['name'] not in result:
-                        result[row['name']] = []
-                    result[row['name']].append((int(row['x1']), int(row['y1']), int(row['x2']), int(row['y2'])))
-        except IOError:
-            pass
-        return result
 
     @staticmethod
     def write_csv(processed_data: pd.DataFrame, file: str) -> bool:
@@ -121,6 +106,7 @@ class Trainer:
                                                               'x2': str(rect[2]), 'y2': str(rect[3])},
                                                              ignore_index=True)
         Trainer.write_csv(self.processed_data, os.path.join(RESOURCE_FOLDER, 'processed.csv'))
+        Drive.upload_single(PROCESSED_IMAGES_FOLDER_ID, file)
         self.reset()
         new_file = self.get_next_image(RAW_IMAGES_FOLDER_ID, FLOOR_PLAN_IMAGES_FOLDER_ID, 'processed.csv')
         self.test_img = tk.PhotoImage(file=new_file)
@@ -172,6 +158,7 @@ class Trainer:
         logger.info(f'next image is {next_image}')
         Drive.download(next_image.id, RAW_FOLDER, override=True)
         image = Trainer.to_correct_size(os.path.join(RAW_FOLDER, next_image.name), DEFAULT_WIDTH, DEFAULT_HEIGHT)
+        # image = Trainer.to_correct_size(os.path.join(RAW_FOLDER, 'mid_img26350.png'), DEFAULT_WIDTH, DEFAULT_HEIGHT)
         return image
 
     def get_cache_files(self, folder_id: str, cache_file: str) -> List[File]:
